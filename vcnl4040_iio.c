@@ -25,8 +25,8 @@
 
 #define VCNL4040_DRV_NAME "vcnl4040"
 //#define VCNL_4040_PROC_ID    0x0C
-#define VCNL_4040_PS         0x08
-#define VCNL_4040_ALS        0x09
+#define VCNL4040_PS         0x08
+#define VCNL4040_ALS        0x09
 
 
 struct VCNL4040_data {
@@ -50,18 +50,74 @@ static const struct iio_chan_spec VCNL4040_channels[] = {
 	}
 };
 
+
+
+
+
+
+// static int vcnl4040_conf(struct vcnl4040_data *data, u8 dev_reg, u16 value){
+// 	// configuration
+// 	int ret;
+// 	ret = i2c_smbus_write_word_data(data->client, u8 dev_reg, value);
+// 	if(ret < 0){
+// 		return ret;
+// 	}
+// 	return 0;
+// }
+
+
+static int vcnl4040_measure(struct VCNL4040_data *data, u8 dev_reg, s32 *val){
+	s32 res;
+	res = i2c_smbus_read_word_data(data->client, dev_reg);
+	// error handling
+	if(res < 0){
+		return res;
+	}
+
+	*val = res;
+	return 0;
+}
+
+static int vcnl4040_read_raw(struct iio_dev *indio_dev, struct iio_chan_spec const *chan, s32 *val){
+	int ret = -EINVAL;
+	struct VCNL4040_data *data = iio_priv(indio_dev);
+	switch(chan->type){
+	case IIO_LIGHT:
+		ret = vcnl4040_measure(data, VCNL4040_ALS, val);
+		if(ret < 0){
+			return ret;
+		}
+		ret = IIO_VAL_INT;
+		break;
+
+	case IIO_PROXIMITY:
+		ret = vcnl4040_measure(data, VCNL4040_PS, val);
+		if(ret < 0){
+			return ret;
+		}
+		ret = IIO_VAL_INT;
+		break;
+	default:
+		break;
+	}
+	return ret;
+}
+
+
 static const struct iio_info VCNL4040_info = {
-	.read_raw = VCNL4040_read_raw,
+	.read_raw = vcnl4040_read_raw,
 	//.write_raw = VCNL4040_write_raw,
 	.driver_module = THIS_MODULE,
 };
+
+
 
 static int VCNL4040_probe(struct i2c_client *client,
 			  const struct i2c_device_id *id)
 {
 	struct VCNL4040_data *data;
 	struct iio_dev *indio_dev;
-	int ret;
+	//int ret;
 
 
 
@@ -93,62 +149,6 @@ static int VCNL4040_probe(struct i2c_client *client,
 	indio_dev->modes = INDIO_DIRECT_MODE;
 	return devm_iio_device_register(&client->dev, indio_dev);
 }
-
-
-// static int vcnl4040_conf(struct vcnl4040_data *data, u8 dev_reg, u16 value){
-// 	// configuration
-// 	int ret;
-// 	ret = i2c_smbus_write_word_data(data->client, u8 dev_reg, value);
-// 	if(ret < 0){
-// 		return ret;
-// 	}
-// 	return 0;
-// }
-
-
-static int vcnl4040_measure(struct vcnl4040_data, u8 dev_reg, s32 *val){
-	s32 res;
-	res = i2c_smbus_read_word_data(data->client, dev_reg);
-	// error handling
-	if(res < 0){
-		return res;
-	}
-
-	*val = res;
-	return 0;
-}
-
-static int vcnl4040_read_raw(struct iio_dev *indio_dev, struct iio_chan_spec const *chan, s32 *val){
-	int ret = -EINVAL;
-	struct vcnl4040_data *data = iio_priv(indio_dev);
-	switch(chan->type){
-	case IIO_LIGHT:
-		ret = vcnl4040_measure(data, VCNL4000_ALS, val);
-		if(ret < 0){
-			return ret;
-		}
-		ret = IIO_VAL_INT;
-		break;
-
-	case IIO_PROXIMITY:
-		ret = vcnl4040_measure(data, VCNL_4040_PS, val);
-		if(ret < 0){
-			return ret;
-		}
-		ret = IIO_VAL_INT;
-		break;
-	default:
-		break;
-	}
-	return ret;
-}
-
-
-
-
-//read_raw
-
-//write_raw
 
 static struct i2c_driver VCNL4040_driver = {
 	.driver = {
