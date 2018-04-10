@@ -1,0 +1,6 @@
+1. Driver coding
+2. edit device tree(.dts & .dtsi)
+3. compile device tree
+4. menu configuration
+5. compile modules/kernel
+6. copy both .dtb and image to tftproot
