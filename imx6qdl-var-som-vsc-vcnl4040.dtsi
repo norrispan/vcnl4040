@@ -1,0 +1,7 @@
+&i2c3 {
+	vcnl4040: vcnl4040@60 {
+		compatible = "Vishay, vcnl4040";
+		reg = <0x60>;
+
+	};
+};
