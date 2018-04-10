@@ -14,7 +14,8 @@
  *   allow to adjust IR current
  *   proximity threshold and event handling
  */
-
+#include <linux/device.h>
+#include <linux/of_device.h>
 #include <linux/module.h>
 #include <linux/i2c.h>
 #include <linux/err.h>
@@ -40,19 +41,23 @@ static const struct i2c_device_id VCNL4040_id[] = {
 MODULE_DEVICE_TABLE(i2c, VCNL4040_id);
 
 
-static const struct iio_chan_spec VCNL4040_channels[] = {
-	{
-		.type = IIO_LIGHT,
-		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW)   //  light  ?
-	}, {
-		.type = IIO_PROXIMITY,
-		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
-	}
+static const struct of_device_id vcnl4040_dt_match[] = {
+	{ .compatible = "Vishay, vcnl4040" },
+	{ },
 };
 
 
 
 
+static const struct iio_chan_spec VCNL4040_channels[] = {
+	{
+		.type = IIO_LIGHT,
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW)
+	}, {
+		.type = IIO_PROXIMITY,
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
+	}
+};
 
 
 // static int vcnl4040_conf(struct vcnl4040_data *data, u8 dev_reg, u16 value){
@@ -108,6 +113,7 @@ static const struct iio_info VCNL4040_info = {
 	.read_raw = vcnl4040_read_raw,
 	//.write_raw = VCNL4040_write_raw,
 	.driver_module = THIS_MODULE,
+
 };
 
 
@@ -154,6 +160,7 @@ static struct i2c_driver VCNL4040_driver = {
 	.driver = {
 		.name   = VCNL4040_DRV_NAME,
 		.owner  = THIS_MODULE,
+		.of_match_table = of_match_ptr(vcnl4040_dt_match),
 	},
 	.probe  = VCNL4040_probe,
 	.id_table = VCNL4040_id,
